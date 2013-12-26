@@ -1,4 +1,4 @@
-#Three.js GPU Processor - THREE.GpuProcessor
+#Three.js GPU Processor
 
 A GPGPU class for Three.js. Create shader passes that can optionally read back 32 bit float values
 from the GPU. View index.html for usage. Contributitions and comments welcomed. This is my first
