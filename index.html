@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.5" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<title>Three.js GPU Processor</title>
+	
+	<!-- Third party tools -->
+	<script src="thirdparty/threejs/three.min.js"></script>
+	
+	<!-- AI -->
+	<script src='GpuProcessor.js'></script>
+	
+	<script>
+		var runGpuProcessor = function() {
+			
+			var powerSize = 2;
+			
+			var gpuProcessor = new THREE.GpuProcessor(powerSize);
+			
+			console.log([
+				"GpuProcessor data size by power was set to ",powerSize,
+				", which is (2^",powerSize," * 2^",powerSize,"). ",
+				"That means the texture has ",gpuProcessor.size," pixels."
+			].join(''));
+			
+			gpuProcessor.addPass(
+				new THREE.ShaderMaterial({
+					uniforms: {
+						uResolution: { type: "v2", value: new THREE.Vector2(gpuProcessor.width, gpuProcessor.height) }
+					},
+					attributes: {},
+					vertexShader: document.getElementById('vertexShader').textContent,
+					fragmentShader: document.getElementById('floatencode').textContent
+				})
+			);
+			
+			console.log('Data before the GPU:');
+			console.log(gpuProcessor.floatArray[0]);
+			
+			console.log('Performing the rendering of the passes.');
+			gpuProcessor.renderPasses();
+			
+			console.log('Raw unsigned 8 bit integers after the GPU:');
+			console.log(gpuProcessor.uIntArray[0]);
+			
+			console.log('32 bit float values after GPU:');
+			console.log(gpuProcessor.floatArray[0]);
+			
+			console.log('Note the precision differences between javascript\'s numbers which are 64 bit doubles, and the 32 bit floats processed by the GPU.');
+		};
+		
+		window.onload = runGpuProcessor;
+		
+	</script>
+	
+	<script type="x-shader/x-vertex" id="vertexShader">
+		
+		uniform vec2 uResolution;
+		
+		varying vec2 vUv;
+		varying float vIndex;
+		
+		void main() {
+			vUv = uv - (0.5 / uResolution); //Make the UV fall on whole numbers
+			vIndex = (vUv.x * uResolution.x) + (vUv.y * uResolution.y) * uResolution.y;
+			
+			//TODO? - I think these operations could be factored out somehow in setting up the geometry and scene
+			vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+			gl_Position = projectionMatrix * mvPosition;
+		}
+	</script>
+	
+	<script type="x-shader/x-fragment" id='floatencode'>
+		
+		uniform vec2 uResolution;
+		
+		varying vec2 vUv;
+		varying float vIndex;
+		
+		//encode_float() is added by the THREE.GpuProcessor
+		
+		void main() {
+			//Return the index plus a little operation to show the GPU doing something
+			gl_FragColor = encode_float(vIndex + 0.3333);
+		}
+
+	</script>
+	
+</head>
+
+<body>
+	<h1>Open up the console</h1>
+</body>
+</html>
