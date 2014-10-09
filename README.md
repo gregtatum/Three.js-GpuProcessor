@@ -29,3 +29,7 @@ pass at this code.
 	gpuProcessor.renderTargets[pass2]
 
 In your fragment shader just set the `gl_FragColor = encode_float(valueToReturn)`
+
+##Working example
+
+Open up index.html and your JavaScript console for a trivial working example.
